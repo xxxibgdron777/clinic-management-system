@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}<div class="row justify-content-center"><div class="col-lg-7"><div class="card"><div class="card-header">{{ title }}
+<div class="small text-muted mt-1">流水号: {{ record.transaction_ref|default:'手动录入' }}</div></div>
+<div class="card-body"><form method="post">{% csrf_token %}
+<div class="row g-3">
+    <div class="col-md-6"><label class="form-label">客户姓名</label><input type="text" name="customer_name" class="form-control" value="{{ record.customer_name }}" required></div>
+    <div class="col-md-6"><label class="form-label">收费项目</label><input type="text" name="project" class="form-control" value="{{ record.project }}" required></div>
+    <div class="col-md-4"><label class="form-label">金额</label><input type="text" class="form-control" value="{{ record.amount }}" readonly></div>
+    <div class="col-md-4"><label class="form-label">收费类型</label><select name="payment_type" class="form-select">{% for k,v in record.PAYMENT_TYPES %}<option value="{{ k }}" {% if record.payment_type == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label">收入类型</label><select name="payer_type" class="form-select">{% for k,v in record.PAYER_TYPES %}<option value="{{ k }}" {% if record.payer_type == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+    <div class="col-12"><label class="form-label">备注</label><input type="text" name="notes" class="form-control" value="{{ record.notes }}"></div>
+</div>
+<button type="submit" class="btn btn-primary mt-3">保存</button>
+<a href="{% url 'frontdesk:payment_list' %}" class="btn btn-outline-secondary mt-3 ms-2">返回</a>
+</form></div></div></div></div>{% endblock %}

@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}<div class="card"><div class="card-header d-flex justify-content-between align-items-center">
+<span>已生成账单</span><a href="{% url 'billing:template_list' %}" class="btn btn-sm btn-outline-primary">管理模板</a></div>
+<div class="card-body p-0"><table class="table table-hover"><thead><tr><th>合作方</th><th>年-月</th><th>总额</th><th>港币</th><th>状态</th><th>生成时间</th></tr></thead>
+<tbody>{% for b in bills %}<tr><td>{{ b.partner_name }}</td><td>{{ b.year }}-{{ b.month|stringformat:'02d' }}</td>
+<td class="text-end fw-medium">{{ b.total_amount|floatformat:0 }}</td><td class="text-end">{{ b.hkd_total|floatformat:0 }}</td>
+<td>{{ b.get_status_display }}</td><td class="small">{{ b.generated_at|date:'Y-m-d H:i' }}</td></tr>
+{% empty %}<tr><td colspan="6" class="empty-state"><i class="bi bi-receipt"></i>暂无已生成的账单</td></tr>{% endfor %}</tbody></table></div></div>{% endblock %}

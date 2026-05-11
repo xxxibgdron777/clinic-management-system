@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}<div class="row justify-content-center"><div class="col-lg-8"><div class="card"><div class="card-header">{{ title }}</div>
+<div class="card-body"><form method="post">{% csrf_token %}
+<div class="row g-3 mb-4">
+    <div class="col-md-6"><label class="form-label">护士/接待费扣除比例</label>
+        <div class="input-group"><input type="number" step="0.01" min="0" max="1" name="deduction_rate" class="form-control" value="{{ config.deduction_rate|stringformat:'.2f' }}"><span class="input-group-text">= {{ config.deduction_rate|floatformat:'-2'|cut:'0.' }}%</span></div></div>
+    <div class="col-md-6"><label class="form-label">合作方分成比例</label>
+        <div class="input-group"><input type="number" step="0.01" min="0" max="1" name="partner_share_ratio" class="form-control" value="{{ config.partner_share_ratio|stringformat:'.2f' }}"><span class="input-group-text">= {{ config.partner_share_ratio|floatformat:'-2'|cut:'0.' }}%</span></div></div>
+</div>
+<h6 class="mb-3">可扣除费用项</h6>
+<div class="row g-3">
+    <div class="col-md-4"><div class="form-check"><input type="checkbox" name="deduct_lab_bills" class="form-check-input" id="deduct_lab_bills" {% if config.deduct_lab_bills %}checked{% endif %}><label class="form-check-label" for="deduct_lab_bills">实验室费用</label></div></div>
+    <div class="col-md-4"><div class="form-check"><input type="checkbox" name="deduct_supplements" class="form-check-input" id="deduct_supplements" {% if config.deduct_supplements %}checked{% endif %}><label class="form-check-label" for="deduct_supplements">保健品费用</label></div></div>
+    <div class="col-md-4"><div class="form-check"><input type="checkbox" name="deduct_imaging" class="form-check-input" id="deduct_imaging" {% if config.deduct_imaging %}checked{% endif %}><label class="form-check-label" for="deduct_imaging">影像费用</label></div></div>
+    <div class="col-md-4"><div class="form-check"><input type="checkbox" name="deduct_nurse" class="form-check-input" id="deduct_nurse" {% if config.deduct_nurse %}checked{% endif %}><label class="form-check-label" for="deduct_nurse">护士人工</label></div></div>
+    <div class="col-md-4"><div class="form-check"><input type="checkbox" name="deduct_reception" class="form-check-input" id="deduct_reception" {% if config.deduct_reception %}checked{% endif %}><label class="form-check-label" for="deduct_reception">客户接待</label></div></div>
+    <div class="col-md-4"><div class="form-check"><input type="checkbox" name="deduct_travel" class="form-check-input" id="deduct_travel" {% if config.deduct_travel %}checked{% endif %}><label class="form-check-label" for="deduct_travel">差旅费</label></div></div>
+    <div class="col-md-4"><div class="form-check"><input type="checkbox" name="deduct_fixed" class="form-check-input" id="deduct_fixed" {% if config.deduct_fixed %}checked{% endif %}><label class="form-check-label" for="deduct_fixed">固定费用</label></div></div>
+</div>
+<div class="mt-4"><button type="submit" class="btn btn-primary">保存配置</button>
+<a href="{% url 'revenue_share:partner_list' %}" class="btn btn-outline-secondary ms-2">返回</a></div>
+</form></div></div></div></div>
+{% endblock %}

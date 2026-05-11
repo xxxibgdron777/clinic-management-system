@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card mb-3"><div class="card-body py-2">
+<form method="get" class="row g-2 align-items-end">
+    <div class="col-md-2"><input type="number" name="year" class="form-control form-control-sm" placeholder="年份" value="{{ year|default:'' }}"></div>
+    <div class="col-md-2"><input type="number" name="month" class="form-control form-control-sm" placeholder="月份" value="{{ month|default:'' }}" min="1" max="12"></div>
+    <div class="col-md-2"><button type="submit" class="btn btn-sm btn-primary">筛选</button>
+    <a href="{% url 'reports:overview' %}" class="btn btn-sm btn-outline-secondary">清除</a></div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'reports:report_export' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-download"></i> 导出Excel
+        </a>
+    </div>
+</form>
+</div></div>
+
+{% for cat_data in report_data %}
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{{ cat_data.category.name }}</span>
+        <div><a href="{% url 'reports:category_items' cat_data.category.pk %}" class="btn btn-sm btn-outline-secondary">管理项目</a></div>
+    </div>
+    <div class="card-body p-0"><table class="table table-sm"><thead><tr>
+        <th>项目名称</th><th>单价</th><th>数量</th><th>金额</th><th>操作</th>
+    </tr></thead><tbody>
+    {% for item_data in cat_data.items %}<tr>
+        <td>{{ item_data.item.name }}</td><td>{{ item_data.item.unit_price }}</td>
+        <td>{% if cat_data.category.is_editable %}
+            <input type="number" class="form-control form-control-sm" style="width:80px;"
+                   value="{{ item_data.quantity }}" form="edit-form-{{ item_data.item.pk }}" name="quantity">
+        {% else %}{{ item_data.quantity }}{% endif %}</td>
+        <td>{% if cat_data.category.is_editable %}
+            <input type="number" step="0.01" class="form-control form-control-sm" style="width:120px;"
+                   value="{{ item_data.amount }}" form="edit-form-{{ item_data.item.pk }}" name="amount">
+        {% else %}{{ item_data.amount|floatformat:2 }}{% endif %}</td>
+        <td>{% if cat_data.category.is_editable %}
+            <form id="edit-form-{{ item_data.item.pk }}" method="post" action="{% url 'reports:report_edit' %}?next={{ request.get_full_path|urlencode }}" class="d-inline">
+                {% csrf_token %}<input type="hidden" name="item_pk" value="{{ item_data.item.pk }}">
+                <input type="hidden" name="year" value="{{ year|default:'' }}">
+                <input type="hidden" name="month" value="{{ month|default:'' }}">
+                <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i></button>
+            </form>{% endif %}
+        </td>
+    </tr>{% endfor %}</tbody>
+    <tfoot><tr class="fw-bold"><td colspan="3" class="text-end">小计:</td>
+    <td>{{ cat_data.total|floatformat:2 }}</td><td></td></tr></tfoot></table></div>
+</div>
+{% empty %}
+<div class="empty-state"><i class="bi bi-clipboard-data"></i><p>暂无报表数据，请先在后台设置报表分类和项目</p></div>
+{% endfor %}
+{% endblock %}

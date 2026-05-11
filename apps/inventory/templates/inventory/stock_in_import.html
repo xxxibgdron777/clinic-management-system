@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}<div class="row justify-content-center"><div class="col-lg-6"><div class="card"><div class="card-header"><i class="bi bi-upload me-2"></i>{{ title }}</div>
+<div class="card-body"><form method="post" enctype="multipart/form-data">{% csrf_token %}
+<div class="mb-3"><label class="form-label">选择Excel文件</label><input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required></div>
+<div class="alert alert-info small">
+    <strong>Excel格式要求:</strong><br>
+    列名: 商品名称(必填)、数量(必填)、单价(必填)、供应商、批次号<br>
+    系统自动匹配中文名或英文名<br>
+    可选勾选"确认导入"自动更新库存
+</div>
+<div class="form-check mb-3"><input type="checkbox" name="confirm" class="form-check-input" id="confirm" checked><label class="form-check-label" for="confirm">确认导入并更新库存</label></div>
+<button type="submit" class="btn btn-primary">开始导入</button>
+<a href="{% url 'inventory:stock_in_list' %}" class="btn btn-outline-secondary ms-2">取消</a>
+</form></div></div></div></div>{% endblock %}

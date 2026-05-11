@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}<div class="card"><div class="card-header">合作方分成管理</div>
+<div class="card-body p-0"><table class="table table-hover"><thead><tr><th>合作方</th><th>项目</th><th>联系人</th><th>电话</th><th>分成配置</th><th>操作</th></tr></thead>
+<tbody>{% for p in partners %}<tr>
+    <td class="fw-medium">{{ p.name }}</td><td>{{ p.get_project_display }}</td>
+    <td>{{ p.contact_person|default:'-' }}</td><td>{{ p.contact_phone|default:'-' }}</td>
+    <td>{% if p.share_config %}扣除{{ p.share_config.deduction_rate|floatformat:'-2'|cut:'0.' }}%, 分成{{ p.share_config.partner_share_ratio|floatformat:'-2'|cut:'0.' }}%{% else %}<span class="text-muted">未配置</span>{% endif %}</td>
+    <td><a href="{% url 'revenue_share:config_edit' p.pk %}" class="btn btn-sm btn-outline-primary">配置</a></td>
+</tr>{% empty %}<tr><td colspan="6" class="empty-state"><i class="bi bi-people"></i>暂无合作方</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

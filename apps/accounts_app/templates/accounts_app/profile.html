@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}<div class="row justify-content-center"><div class="col-lg-6"><div class="card"><div class="card-header">个人中心</div>
+<div class="card-body"><table class="table"><tr><td>用户名</td><td><strong>{{ user.username }}</strong></td></tr>
+<tr><td>角色</td><td>{{ user.profile.get_role_display }}</td></tr>
+<tr><td>电话</td><td>{{ user.profile.phone|default:'-' }}</td></tr>
+<tr><td>部门</td><td>{{ user.profile.department|default:'-' }}</td></tr>
+<tr><td>可访问模块</td><td>{{ user.profile.get_accessible_modules|join:', ' }}</td></tr></table></div></div></div></div>{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}<div class="row justify-content-center"><div class="col-lg-7"><div class="card"><div class="card-header">{{ title }}</div>
+<div class="card-body"><form method="post">{% csrf_token %}
+<div class="row g-3">
+    <div class="col-md-6"><label class="form-label">客户姓名</label><input type="text" name="customer_name" class="form-control" required></div>
+    <div class="col-md-6"><label class="form-label">收款日期</label><input type="date" name="payment_date" class="form-control" required></div>
+    <div class="col-md-4"><label class="form-label">金额</label><input type="number" step="0.01" name="amount" class="form-control" required></div>
+    <div class="col-md-4"><label class="form-label">收费项目</label><input type="text" name="project" class="form-control" required></div>
+    <div class="col-md-4"><label class="form-label">收费类型</label><select name="payment_type" class="form-select"><option value="outpatient">门诊</option><option value="lab">检测</option><option value="medication">药费</option><option value="injection">打针/输液</option><option value="supplements">保健品</option><option value="other">其他</option></select></div>
+    <div class="col-md-6"><label class="form-label">收入类型</label><select name="payer_type" class="form-select"><option value="self">自费</option><option value="pingan">平安保险</option><option value="msh">MSH保险</option><option value="taikang">泰康保险</option><option value="corporate">企业合作</option></select></div>
+    <div class="col-md-6"><label class="form-label">备注</label><input type="text" name="notes" class="form-control"></div>
+</div>
+<button type="submit" class="btn btn-primary mt-3">保存</button>
+<a href="{% url 'frontdesk:payment_list' %}" class="btn btn-outline-secondary mt-3 ms-2">取消</a>
+</form></div></div></div></div>{% endblock %}

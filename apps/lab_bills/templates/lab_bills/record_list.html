@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card mb-3"><div class="card-body py-2">
+<form method="get" class="row g-2 align-items-end">
+    <div class="col-md-2">{{ filter_form.lab_partner }}</div>
+    <div class="col-md-2">{{ filter_form.customer_name }}</div>
+    <div class="col-md-1">{{ filter_form.date_from }}</div>
+    <div class="col-md-1">{{ filter_form.date_to }}</div>
+    <div class="col-md-2">{{ filter_form.project }}</div>
+    <div class="col-md-1">{{ filter_form.payer }}</div>
+    <div class="col-md-1">{{ filter_form.department }}</div>
+    <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i> 筛选</button>
+        <a href="{% url 'lab_bills:record_list' %}" class="btn btn-sm btn-outline-secondary">清除</a>
+    </div>
+</form>
+</div></div>
+
+<div class="card">
+<form id="batchForm" method="post" action="{% url 'lab_bills:record_batch_delete' %}" onsubmit="return confirmBatchDelete()">
+{% csrf_token %}
+<div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>实验室账单记录 ({{ summary.total_count }} 条)</span>
+    <div class="d-flex gap-2">
+        <button type="button" id="selectAllBtn" class="btn btn-sm btn-outline-dark" onclick="toggleSelectAll()">全选</button>
+        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> 批量删除</button>
+        <a href="{% url 'lab_bills:record_import' %}" class="btn btn-sm btn-outline-success"><i class="bi bi-upload"></i> 导入账单</a>
+        <a href="{% url 'lab_bills:record_create' %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> 手动录入</a>
+        <a href="{% url 'lab_bills:record_export' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i> 导出Excel</a>
+    </div>
+</div>
+<div class="card-body p-0" style="overflow-x:auto;">
+    <table class="table table-hover table-sm">
+        <thead><tr>
+            <th style="width:40px;"><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
+            <th>合作方</th><th>检测日期</th><th>客户姓名</th><th>检测套餐</th><th>编码</th>
+            <th>数量</th><th>标准单价</th><th>折扣</th><th>折后价格</th>
+            <th>付款人</th><th>科室</th><th>项目</th><th>录入时间</th><th>操作</th>
+        </tr></thead>
+        <tbody>
+            {% for r in records %}
+            <tr>
+                <td><input type="checkbox" name="record_ids" value="{{ r.pk }}" class="record-checkbox"></td>
+                <td><span class="badge bg-secondary">{{ r.lab_partner.short_name }}</span></td>
+                <td class="small">{{ r.test_date|date:'Y-m-d'|default:'-' }}</td>
+                <td class="fw-medium">{{ r.customer_name }}</td>
+                <td>{{ r.test_package }}</td>
+                <td class="small text-muted">{{ r.package_code|default:'-' }}</td>
+                <td>{{ r.test_quantity }}</td>
+                <td class="text-end">{{ r.standard_price }}</td>
+                <td class="text-center">{{ r.discount }}</td>
+                <td class="text-end fw-medium">{{ r.settlement_price }}</td>
+                <td>{{ r.get_payer_display|default:'-' }}</td>
+                <td>{{ r.get_department_display|default:'-' }}</td>
+                <td><span class="badge bg-info text-dark">{{ r.get_project_display|default:'-' }}</span></td>
+                <td class="small text-muted">{{ r.created_at|date:'m-d H:i' }}</td>
+                <td><a href="{% url 'lab_bills:record_edit' r.pk %}" class="btn btn-sm btn-outline-secondary">编辑</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="15" class="empty-state"><i class="bi bi-inbox"></i>暂无记录，请先导入账单或手动添加</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</form>
+<div class="summary-bar">
+    <span>合计数量: <strong>{{ summary.total_quantity }}</strong></span>
+    <span>合计金额(折后): <strong>{{ summary.total_amount|floatformat:2 }}</strong></span>
+</div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+#id_lab_partner, #id_customer_name, #id_date_from, #id_date_to, #id_project, #id_payer, #id_department {
+    width:100%; padding: 0.2rem 0.4rem; font-size: 0.85rem; border: 1px solid #dee2e6; border-radius: 0.3rem;
+}
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+function toggleAll(checkbox) {
+    document.querySelectorAll('.record-checkbox').forEach(cb => cb.checked = checkbox.checked);
+}
+function toggleSelectAll() {
+    const allCb = document.getElementById('selectAll');
+    const checked = document.querySelectorAll('.record-checkbox:checked').length;
+    const total = document.querySelectorAll('.record-checkbox').length;
+    if (checked === total) {
+        allCb.checked = false;
+        document.querySelectorAll('.record-checkbox').forEach(cb => cb.checked = false);
+    } else {
+        allCb.checked = true;
+        document.querySelectorAll('.record-checkbox').forEach(cb => cb.checked = true);
+    }
+}
+function confirmBatchDelete() {
+    const checked = document.querySelectorAll('.record-checkbox:checked');
+    if (checked.length === 0) {
+        alert('请至少选择一条记录');
+        return false;
+    }
+    return confirm('确定要删除选中的 ' + checked.length + ' 条记录吗？此操作不可撤销。');
+}
+</script>
+{% endblock %}

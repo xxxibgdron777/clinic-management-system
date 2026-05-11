@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}<div class="card"><div class="card-header d-flex justify-content-between align-items-center">
+<span>{{ category.name }} - 项目列表</span><span class="badge bg-{% if category.is_editable %}success{% else %}secondary{% endif %}">{% if category.is_editable %}可在线编辑{% else %}只读{% endif %}</span></div>
+<div class="card-body p-0"><table class="table table-hover"><thead><tr><th>项目名称</th><th>单价</th><th>排序</th><th>状态</th></tr></thead>
+<tbody>{% for item in items %}<tr><td>{{ item.name }}</td><td class="text-end">{{ item.unit_price }}</td><td>{{ item.order }}</td>
+<td>{% if item.is_active %}<span class="badge bg-success">启用</span>{% else %}<span class="badge bg-secondary">停用</span>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="4" class="empty-state"><i class="bi bi-list-ul"></i>暂无项目，请在后台管理中添加</td></tr>{% endfor %}</tbody></table></div></div>{% endblock %}

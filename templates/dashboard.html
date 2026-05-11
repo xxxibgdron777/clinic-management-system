@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}仪表盘 - 诊所管理系统{% endblock %}
+{% block page_title %}仪表盘{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #eff6ff; color: #2563eb;">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_products }}</div>
+                <div class="stat-label">商品总数</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_vip_members }}</div>
+                <div class="stat-label">VIP会员</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
+                <i class="bi bi-file-earmark-medical"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_lab_records }}</div>
+                <div class="stat-label">实验室记录</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fdf2f8; color: #db2777;">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div>
+                <div class="stat-value">--</div>
+                <div class="stat-label">本月营收</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>快捷入口</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <a href="{% url 'inventory:stock_in_create' %}" class="btn btn-outline-primary w-100 py-3">
+                            <i class="bi bi-plus-circle d-block mb-1" style="font-size:1.3rem;"></i>
+                            新增入库
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'inventory:stock_out_create' %}" class="btn btn-outline-danger w-100 py-3">
+                            <i class="bi bi-dash-circle d-block mb-1" style="font-size:1.3rem;"></i>
+                            新增出库
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'lab_bills:record_import' %}" class="btn btn-outline-success w-100 py-3">
+                            <i class="bi bi-upload d-block mb-1" style="font-size:1.3rem;"></i>
+                            导入账单
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'frontdesk:payment_create' %}" class="btn btn-outline-warning w-100 py-3">
+                            <i class="bi bi-pencil d-block mb-1" style="font-size:1.3rem;"></i>
+                            录入收款
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">最近出库记录</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>商品</th><th>数量</th><th>金额</th><th>客户</th><th>时间</th></tr></thead>
+                    <tbody>
+                        {% for out in recent_stock_outs|slice:':8' %}
+                        <tr>
+                            <td>{{ out.product.name_cn }}</td>
+                            <td>{{ out.quantity }}</td>
+                            <td>{{ out.total_amount }}</td>
+                            <td>{{ out.customer_name|default:'-' }}</td>
+                            <td class="text-muted small">{{ out.created_at|date:'m-d H:i' }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">暂无出库记录</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

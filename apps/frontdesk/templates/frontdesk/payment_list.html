@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card mb-3"><div class="card-body py-2">
+<form method="get" class="row g-2 align-items-end">
+    <div class="col-md-2"><input type="text" name="q" class="form-control form-control-sm" placeholder="搜索客户姓名..." value="{{ query }}"></div>
+    <div class="col-md-2">
+        <select name="payment_type" class="form-select form-select-sm"><option value="">全部类型</option>
+        {% for k,v in record.model.PAYMENT_TYPES %}<option value="{{ k }}" {% if payment_type == k %}selected{% endif %}>{{ v }}</option>{% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="payer_type" class="form-select form-select-sm"><option value="">全部收入类型</option>
+        {% for k,v in record.model.PAYER_TYPES %}<option value="{{ k }}" {% if payer_type == k %}selected{% endif %}>{{ v }}</option>{% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-sm btn-primary">筛选</button>
+        <a href="{% url 'frontdesk:payment_list' %}" class="btn btn-sm btn-outline-secondary">清除</a>
+    </div>
+</form>
+</div></div>
+
+<div class="card"><div class="card-header d-flex justify-content-between align-items-center">
+    <span>收款记录</span>
+    <div class="d-flex gap-2">
+        <a href="{% url 'frontdesk:payment_import' %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-upload"></i> 导入流水</a>
+        <a href="{% url 'frontdesk:payment_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 手动录入</a>
+    </div>
+</div>
+<div class="card-body p-0"><table class="table table-hover"><thead><tr>
+    <th>客户姓名</th><th>收款日期</th><th>金额</th><th>收费项目</th><th>类型</th><th>收入类型</th><th>流水号</th><th>理赔</th><th>操作</th>
+</tr></thead><tbody>{% for r in records %}<tr>
+    <td class="fw-medium">{{ r.customer_name }}</td><td class="small">{{ r.payment_date|date:'Y-m-d' }}</td>
+    <td class="text-end fw-medium">{{ r.amount|floatformat:2 }}</td><td>{{ r.project }}</td>
+    <td>{{ r.get_payment_type_display }}</td><td>{{ r.get_payer_type_display }}</td>
+    <td class="small text-muted">{{ r.transaction_ref|default:'-' }}</td>
+    <td>{% if r.insurance_claimed %}<span class="badge bg-info">已申请</span>{% else %}-{% endif %}</td>
+    <td><a href="{% url 'frontdesk:payment_edit' r.pk %}" class="btn btn-sm btn-outline-secondary">编辑</a></td>
+</tr>{% empty %}<tr><td colspan="9" class="empty-state"><i class="bi bi-cash"></i>暂无收款记录</td></tr>{% endfor %}</tbody></table></div>
+<div class="summary-bar"><span>合计金额: <strong>{{ total|floatformat:2 }}</strong></span></div></div>
+{% endblock %}

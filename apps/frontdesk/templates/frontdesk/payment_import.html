@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}<div class="row justify-content-center"><div class="col-lg-6"><div class="card"><div class="card-header"><i class="bi bi-upload me-2"></i>{{ title }}</div>
+<div class="card-body"><form method="post" enctype="multipart/form-data">{% csrf_token %}
+<div class="mb-3"><label class="form-label">选择通联支付导出文件</label><input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required></div>
+<div class="alert alert-info small">导入后请编辑每条收款记录，标注客户姓名、收费项目、收入类型</div>
+<button type="submit" class="btn btn-primary">导入</button>
+<a href="{% url 'frontdesk:payment_list' %}" class="btn btn-outline-secondary ms-2">取消</a>
+</form></div></div></div></div>{% endblock %}

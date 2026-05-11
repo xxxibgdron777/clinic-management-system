@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% load crispy_forms_tags %}
+{% block content %}<div class="row justify-content-center"><div class="col-lg-7">
+<div class="card"><div class="card-header">{{ title }}</div><div class="card-body">
+<form method="post">{% csrf_token %}{{ form|crispy }}
+<button type="submit" class="btn btn-primary">保存</button>
+<a href="javascript:history.back()" class="btn btn-outline-secondary ms-2">取消</a>
+</form></div></div></div></div>{% endblock %}

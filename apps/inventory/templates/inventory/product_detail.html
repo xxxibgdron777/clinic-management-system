@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center">
+    <span>{{ product.name_cn }} {% if product.name_en %}({{ product.name_en }}){% endif %}</span>
+    <a href="{% url 'inventory:product_edit' product.pk %}" class="btn btn-sm btn-outline-primary">编辑</a>
+</div>
+<div class="card-body">
+    <div class="row g-3">
+        <div class="col-md-3"><small class="text-muted">单位</small><br><strong>{{ product.unit }}</strong></div>
+        <div class="col-md-3"><small class="text-muted">成本价</small><br><strong>{{ product.cost_price }}</strong></div>
+        <div class="col-md-3"><small class="text-muted">售价</small><br><strong>{{ product.selling_price }}</strong></div>
+        <div class="col-md-3"><small class="text-muted">当前库存</small><br><strong class="{% if product.current_stock <= 0 %}text-danger{% endif %}">{{ product.current_stock }}</strong></div>
+        <div class="col-md-3"><small class="text-muted">供应商</small><br>{{ product.supplier|default:'-' }}</div>
+        <div class="col-md-3"><small class="text-muted">有效期</small><br>{{ product.expiry_date|date:'Y-m-d'|default:'-' }}</div>
+        <div class="col-md-3"><small class="text-muted">批次号</small><br>{{ product.batch_number|default:'-' }}</div>
+        <div class="col-md-3"><small class="text-muted">状态</small><br><span class="badge {% if product.is_active %}bg-success{% else %}bg-secondary{% endif %}">{{ product.is_active|yesno:'启用,停用' }}</span></div>
+    </div>
+</div></div>
+
+<div class="row g-4">
+    <div class="col-md-6"><div class="card"><div class="card-header">最近入库 (50条)</div>
+    <div class="card-body p-0"><table class="table table-sm"><thead><tr><th>数量</th><th>单价</th><th>类型</th><th>时间</th></tr></thead>
+    <tbody>{% for r in stock_ins %}<tr><td>+{{ r.quantity }}</td><td>{{ r.unit_price }}</td><td>{{ r.get_type_display }}</td><td class="small text-muted">{{ r.created_at|date:'m-d H:i' }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-3">暂无</td></tr>{% endfor %}</tbody></table></div></div></div>
+    <div class="col-md-6"><div class="card"><div class="card-header">最近出库 (50条)</div>
+    <div class="card-body p-0"><table class="table table-sm"><thead><tr><th>数量</th><th>金额</th><th>类型</th><th>客户</th><th>时间</th></tr></thead>
+    <tbody>{% for r in stock_outs %}<tr><td class="text-danger">-{{ r.quantity }}</td><td>{{ r.total_amount }}</td><td>{{ r.get_out_type_display }}</td><td>{{ r.customer_name|default:'-' }}</td><td class="small text-muted">{{ r.created_at|date:'m-d H:i' }}</td></tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-3">暂无</td></tr>{% endfor %}</tbody></table></div></div></div>
+</div>
+{% endblock %}

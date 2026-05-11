@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}<div class="card"><div class="card-header d-flex justify-content-between align-items-center">
+<span>疗程费用项</span><div class="d-flex gap-2"><a href="{% url 'vip:injection_import' %}" class="btn btn-sm btn-outline-success"><i class="bi bi-droplet"></i> 导入点滴费用</a><a href="{% url 'vip:cost_item_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新增</a></div></div>
+<div class="card-body p-0"><table class="table table-hover"><thead><tr><th>会员</th><th>疗程</th><th>费用类型</th><th>标准金额</th><th>成本金额</th><th>总金额</th><th>分摊</th></tr></thead>
+<tbody>{% for i in items %}<tr><td>{{ i.member.name }}</td><td>{{ i.course|default:'-' }}</td>
+<td>{{ i.get_cost_type_display }}</td><td class="text-end">{{ i.standard_amount }}</td>
+<td class="text-end">{{ i.cost_amount }}</td><td class="text-end fw-medium">{{ i.total_amount }}</td>
+<td>{% if i.is_per_course %}<span class="badge bg-info">按疗程</span>{% else %}-{% endif %}</td></tr>
+{% empty %}<tr><td colspan="7" class="empty-state"><i class="bi bi-calculator"></i>暂无费用项</td></tr>{% endfor %}</tbody></table></div></div>{% endblock %}

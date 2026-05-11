@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card"><div class="card-header d-flex justify-content-between align-items-center">
+    <span>VIP会员列表 ({{ members.count }})</span>
+    <div class="d-flex gap-2">
+        <a href="{% url 'vip:member_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新增会员</a>
+        <a href="{% url 'vip:course_create' %}" class="btn btn-sm btn-outline-primary">新增疗程</a>
+        <a href="{% url 'vip:payment_create' %}" class="btn btn-sm btn-outline-success">新增收款</a>
+    </div>
+</div>
+<div class="card-body p-0"><table class="table table-hover"><thead><tr>
+    <th>姓名</th><th>性别</th><th>电话</th><th>出生日期</th><th>状态</th><th>创建时间</th><th>操作</th>
+</tr></thead><tbody>{% for m in members %}<tr>
+    <td><a href="{% url 'vip:member_detail' m.pk %}" class="text-decoration-none fw-medium">{{ m.name }}</a></td>
+    <td>{{ m.get_gender_display }}</td><td>{{ m.phone|default:'-' }}</td>
+    <td class="small">{{ m.birth_date|date:'Y-m-d'|default:'-' }}</td>
+    <td><span class="badge {% if m.is_active %}bg-success{% else %}bg-secondary{% endif %} badge-status">{{ m.is_active|yesno:'活跃,停用' }}</span></td>
+    <td class="small text-muted">{{ m.created_at|date:'Y-m-d' }}</td>
+    <td><a href="{% url 'vip:member_edit' m.pk %}" class="btn btn-sm btn-outline-secondary">编辑</a></td>
+</tr>{% empty %}<tr><td colspan="7" class="empty-state"><i class="bi bi-person-plus"></i>暂无VIP会员</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

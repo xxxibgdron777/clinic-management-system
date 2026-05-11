@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}<div class="card"><div class="card-header d-flex justify-content-between align-items-center">
+<span>ABC系统账单导入</span><a href="{% url 'billing:import_upload' %}" class="btn btn-sm btn-primary"><i class="bi bi-upload"></i> 导入Excel</a></div>
+<div class="card-body p-0"><table class="table table-hover"><thead><tr><th>客户</th><th>日期</th><th>名称</th><th>单价</th><th>数量</th><th>金额</th><th>港币</th><th>来源</th></tr></thead>
+<tbody>{% for r in imports %}<tr><td>{{ r.customer_name }}</td><td class="small">{{ r.bill_date|date:'Y-m-d' }}</td>
+<td>{{ r.item_name }}</td><td class="text-end">{{ r.unit_price }}</td><td>{{ r.quantity }}</td>
+<td class="text-end">{{ r.amount }}</td><td class="text-end">{{ r.hkd_amount }}</td>
+<td class="small text-muted">{{ r.source_file }}</td></tr>
+{% empty %}<tr><td colspan="8" class="empty-state"><i class="bi bi-file-earmark-excel"></i>暂无导入记录</td></tr>{% endfor %}</tbody></table></div></div>{% endblock %}

@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}<div class="card"><div class="card-header d-flex justify-content-between align-items-center">
+<span>疗程列表</span><a href="{% url 'vip:course_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新增</a></div>
+<div class="card-body p-0"><table class="table table-hover"><thead><tr><th>会员</th><th>时长</th><th>总价</th><th>开始</th><th>结束</th><th>医生</th><th>状态</th></tr></thead>
+<tbody>{% for c in courses %}<tr><td>{{ c.member.name }}</td><td>{{ c.get_duration_months_display }}</td><td>{{ c.total_price|floatformat:0 }}</td>
+<td class="small">{{ c.start_date|date:'Y-m-d' }}</td><td class="small">{{ c.end_date|date:'Y-m-d' }}</td>
+<td>{{ c.attending_doctor|default:'-' }}</td><td>{{ c.get_status_display }}</td></tr>
+{% empty %}<tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i>暂无疗程</td></tr>{% endfor %}</tbody></table></div></div>{% endblock %}
