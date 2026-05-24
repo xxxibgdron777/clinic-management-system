@@ -69,7 +69,7 @@ class Command(BaseCommand):
                 '抗衰老项目', '荷尔蒙项目', '生活方式门诊',
                 '糖尿病管理', '心血管检测',
             ]),
-            ('神经康复', 3, True, ['神经评估', '认知训练', '言语治疗', '作业治疗']),
+            # ('神经康复', 3, True, ['神经评估', '认知训练', '言语治疗', '作业治疗']),  # 暂时移除
         ]
         for name, order, editable, items in categories:
             cat, _ = ReportCategory.objects.get_or_create(
