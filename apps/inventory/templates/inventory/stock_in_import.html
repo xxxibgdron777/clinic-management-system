@@ -6,7 +6,8 @@
     <strong>Excel格式要求:</strong><br>
     列名: 商品名称(必填)、数量(必填)、单价(必填)、供应商、批次号<br>
     系统自动匹配中文名或英文名<br>
-    可选勾选"确认导入"自动更新库存
+    可选勾选"确认导入"自动更新库存<br>
+    <a href="{% url 'inventory:stock_in_template' %}" class="text-primary"><i class="bi bi-download"></i> 下载Excel模板</a>
 </div>
 <div class="form-check mb-3"><input type="checkbox" name="confirm" class="form-check-input" id="confirm" checked><label class="form-check-label" for="confirm">确认导入并更新库存</label></div>
 <button type="submit" class="btn btn-primary">开始导入</button>

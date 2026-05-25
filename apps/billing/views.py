@@ -4,6 +4,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from .models import BillImport, BillTemplate, GeneratedBill
+from apps.core.template_utils import generate_template_excel
+
+
+def _safe_str(val):
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return ''
+    return str(val).strip()
 
 
 @login_required
@@ -12,6 +19,15 @@ def import_list(request):
     return render(request, 'billing/import_list.html', {
         'imports': imports, 'title': 'ABC系统账单导入'
     })
+
+
+@login_required
+def import_template(request):
+    """下载ABC账单Excel模板"""
+    return generate_template_excel(
+        ['客户', '时间', '名称', '单价', '数量', '金额', '港币金额'],
+        'ABC账单导入模板.xlsx'
+    )
 
 
 @login_required
@@ -25,9 +41,9 @@ def import_upload(request):
             for _, row in df.iterrows():
                 try:
                     BillImport.objects.create(
-                        customer_name=str(row.get('客户', row.get('customer', ''))).strip(),
+                        customer_name=_safe_str(row.get('客户', row.get('customer', ''))),
                         bill_date=pd.to_datetime(row.get('时间', row.get('date', ''))).date(),
-                        item_name=str(row.get('名称', row.get('name', ''))).strip(),
+                        item_name=_safe_str(row.get('名称', row.get('name', ''))),
                         unit_price=float(row.get('单价', row.get('unit_price', 0)) or 0),
                         quantity=int(row.get('数量', row.get('quantity', 1)) or 1),
                         amount=float(row.get('金额', row.get('amount', 0)) or 0),

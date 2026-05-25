@@ -17,6 +17,7 @@ urlpatterns = [
     path('revenue-share/', include('apps.revenue_share.urls')),
     path('billing/', include('apps.billing.urls')),
     path('reports/', include('apps.reports.urls')),
+    path('projects/', include('apps.projects.urls')),
     path('frontdesk/', include('apps.frontdesk.urls')),
 ]
 

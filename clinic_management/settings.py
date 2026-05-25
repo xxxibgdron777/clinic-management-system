@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'apps.revenue_share',
     'apps.billing',
     'apps.reports',
+    'apps.projects',
     'apps.frontdesk',
 ]
 

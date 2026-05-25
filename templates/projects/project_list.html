@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">{{ title }}</h5>
+</div>
+
+{% for partner in partners %}
+<div class="card mb-3">
+    <div class="card-header"><strong>{{ partner.name }}</strong></div>
+    <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <thead><tr><th>项目名称</th><th>类型</th><th>单价</th><th>疗程(月)</th><th>分成配置</th></tr></thead>
+            <tbody>
+                {% for proj in partner.projects.all %}
+                <tr>
+                    <td>{{ proj.name }}</td>
+                    <td><span class="badge bg-info text-dark">{{ proj.get_project_type_display }}</span></td>
+                    <td class="text-end">{{ proj.unit_price|floatformat:0 }}</td>
+                    <td>{{ proj.duration_months }}</td>
+                    <td>
+                        <a href="{% url 'projects:share_config_edit' proj.pk %}" class="btn btn-sm btn-outline-primary">分成配置</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% empty %}
+<div class="empty-state"><i class="bi bi-building"></i>暂无合作商，请在管理后台添加</div>
+{% endfor %}
+{% endblock %}

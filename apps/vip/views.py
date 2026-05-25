@@ -5,6 +5,49 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from .models import VIPMember, VIPCourse, VIPPayment, VIPCostItem
 from .forms import VIPMemberForm, VIPCourseForm, VIPPaymentForm, VIPCostItemForm, InjectionImportForm
+from apps.core.template_utils import generate_template_excel
+
+
+def _safe_str(val):
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return ''
+    return str(val).strip()
+
+
+@login_required
+def member_import(request):
+    """批量导入会员"""
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES['excel_file']
+        try:
+            df = pd.read_excel(excel_file)
+            imported, skipped = 0, 0
+            for _, row in df.iterrows():
+                name = _safe_str(row.get('会员姓名', row.get('姓名', '')))
+                number = _safe_str(row.get('档案号', row.get('会员编号', row.get('编号', ''))))
+                if not name:
+                    skipped += 1
+                    continue
+                phone = _safe_str(row.get('电话', ''))
+                gender = 'F' if '女' in _safe_str(row.get('性别', '')) else 'M'
+                birth = None
+                try:
+                    birth = pd.to_datetime(row.get('出生日期', row.get('生日', ''))).date()
+                except Exception:
+                    pass
+                if VIPMember.objects.filter(member_number=number, member_number__gt='').exists() and number:
+                    skipped += 1
+                    continue
+                VIPMember.objects.create(
+                    name=name, member_number=number, phone=phone,
+                    gender=gender, birth_date=birth,
+                )
+                imported += 1
+            messages.success(request, f'导入完成: {imported} 条，跳过 {skipped} 条')
+        except Exception as e:
+            messages.error(request, f'导入失败: {str(e)}')
+        return redirect('vip:member_list')
+    return render(request, 'vip/member_import.html', {'title': '批量导入会员'})
 
 
 @login_required
@@ -19,11 +62,14 @@ def member_list(request):
 def member_detail(request, pk):
     member = get_object_or_404(VIPMember, pk=pk)
     courses = member.courses.all()
-    payments = member.payments.order_by('-payment_date')
+    payments = member.frontdesk_payments.order_by('-payment_date')
+    lab_bills = member.lab_bill_records.select_related('lab_partner').order_by('-test_date')
+    stock_outs = member.stock_outs.select_related('product').order_by('-created_at')[:20]
     cost_items = member.cost_items.select_related('course').all()
     total_revenue = payments.aggregate(s=Sum('amount'))['s'] or 0
     return render(request, 'vip/member_detail.html', {
         'member': member, 'courses': courses, 'payments': payments,
+        'lab_bills': lab_bills, 'stock_outs': stock_outs,
         'cost_items': cost_items, 'total_revenue': total_revenue,
         'title': f'会员详情 - {member.name}'
     })
@@ -119,6 +165,15 @@ def cost_item_create(request):
 
 
 @login_required
+def injection_template(request):
+    """下载点滴费用Excel模板"""
+    return generate_template_excel(
+        ['日期', '项目名称', '数量', '单价', '金额'],
+        '点滴费用导入模板.xlsx'
+    )
+
+
+@login_required
 def injection_import(request):
     """从Excel导入点滴及针剂费用"""
     if request.method == 'POST':
@@ -143,7 +198,7 @@ def injection_import(request):
 
             for idx, row in df.iterrows():
                 try:
-                    item_name = str(row.get(col_map.get('item_name', ''), '')).strip()
+                    item_name = _safe_str(row.get(col_map.get('item_name', '')))
                     cost_date = _parse_injection_date(row.get(col_map.get('cost_date', '')))
                     qty = float(row.get(col_map.get('quantity', ''), 1) or 1)
                     unit_price = float(row.get(col_map.get('unit_price', ''), 0) or 0)

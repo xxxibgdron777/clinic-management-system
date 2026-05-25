@@ -6,6 +6,13 @@ from django.db.models import Q, Sum
 from django.http import HttpResponse
 from .models import Product, StockIn, StockOut
 from .forms import ProductForm, StockInForm, StockOutForm
+from apps.core.template_utils import generate_template_excel
+
+
+def _safe_str(val):
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return ''
+    return str(val).strip()
 
 
 @login_required
@@ -84,6 +91,15 @@ def stock_in_create(request):
 
 
 @login_required
+def stock_in_template(request):
+    """下载入库Excel模板"""
+    return generate_template_excel(
+        ['商品名称', '数量', '单价', '供应商', '批次号'],
+        '入库导入模板.xlsx'
+    )
+
+
+@login_required
 def stock_in_import(request):
     """Excel批量导入入库"""
     if request.method == 'POST' and request.FILES.get('excel_file'):
@@ -94,7 +110,7 @@ def stock_in_import(request):
             errors = []
             for idx, row in df.iterrows():
                 try:
-                    name = str(row.get('商品名称', row.get('name_cn', ''))).strip()
+                    name = _safe_str(row.get('商品名称', row.get('name_cn', '')))
                     qty = int(row.get('数量', row.get('quantity', 0)))
                     price = float(row.get('单价', row.get('unit_price', 0)))
                     if name and qty > 0:
@@ -105,8 +121,8 @@ def stock_in_import(request):
                         StockIn.objects.create(
                             product=product, quantity=qty, unit_price=price,
                             type='purchase',
-                            supplier=str(row.get('供应商', row.get('supplier', ''))).strip() or None,
-                            batch_number=str(row.get('批次号', row.get('batch_number', ''))).strip() or '',
+                            supplier=_safe_str(row.get('供应商', row.get('supplier', ''))) or None,
+                            batch_number=_safe_str(row.get('批次号', row.get('batch_number', ''))) or '',
                             confirmed=request.POST.get('confirm', 'on') == 'on'
                         )
                         success_count += 1

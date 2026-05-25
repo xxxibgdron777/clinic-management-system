@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  clinic-app:
+    build: .
+    container_name: clinic-app
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./media:/app/media
+    environment:
+      - DJANGO_SETTINGS_MODULE=clinic_management.settings
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-clinic-prod-key-change-me}
+    networks:
+      - clinic-net
+
+networks:
+  clinic-net:
+    driver: bridge

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">{{ title }}</h5>
+    <div><a href="{% url 'projects:manual_cost_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新增</a></div>
+</div>
+
+<div class="card mb-3"><div class="card-body py-2">
+<form method="get" class="row g-2 align-items-end">
+    <div class="col-md-3">
+        <select name="project" class="form-select form-select-sm">
+            <option value="">全部项目</option>
+            {% for p in projects %}<option value="{{ p.pk }}">{{ p }}</option>{% endfor %}
+        </select>
+    </div>
+    <div class="col-md-1"><input name="year" class="form-control form-control-sm" placeholder="年" type="number"></div>
+    <div class="col-md-1"><input name="month" class="form-control form-control-sm" placeholder="月" type="number"></div>
+    <div class="col-md-2"><button type="submit" class="btn btn-sm btn-primary">筛选</button></div>
+</form>
+</div></div>
+
+<div class="card"><div class="card-body p-0"><table class="table table-sm table-hover mb-0">
+    <thead><tr><th>日期</th><th>项目</th><th>科目</th><th>金额</th><th>备注</th></tr></thead>
+    <tbody>
+    {% for e in entries %}
+    <tr><td>{{ e.cost_date|date:'Y-m-d' }}</td><td>{{ e.project }}</td><td>{{ e.category.name }}</td><td class="text-end">{{ e.amount|floatformat:0 }}</td><td class="small text-muted">{{ e.notes|truncatechars:30 }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="empty-state">暂无手工费用记录</td></tr>{% endfor %}
+    </tbody>
+</table></div></div>
+<div class="mt-2 text-end"><small>合计: <strong>{{ total|floatformat:0 }}</strong></small></div>
+{% endblock %}

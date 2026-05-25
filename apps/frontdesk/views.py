@@ -4,6 +4,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from .models import PaymentRecord, CashRecord
+from apps.core.template_utils import generate_template_excel
+
+
+def _safe_str(val):
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return ''
+    return str(val).strip()
 
 
 @login_required
@@ -28,6 +35,15 @@ def payment_list(request):
 
 
 @login_required
+def payment_template(request):
+    """下载收款流水Excel模板"""
+    return generate_template_excel(
+        ['客户姓名', '收款日期', '金额', '收费项目', '流水号'],
+        '收款流水导入模板.xlsx'
+    )
+
+
+@login_required
 def payment_import(request):
     """Import payment records from payment platform (通联支付) Excel."""
     if request.method == 'POST' and request.FILES.get('excel_file'):
@@ -38,11 +54,11 @@ def payment_import(request):
             for _, row in df.iterrows():
                 try:
                     PaymentRecord.objects.create(
-                        customer_name=str(row.get('客户姓名', row.get('customer', ''))).strip(),
+                        customer_name=_safe_str(row.get('客户姓名', row.get('customer', ''))),
                         payment_date=pd.to_datetime(row.get('收款日期', row.get('date', ''))).date(),
                         amount=float(row.get('金额', row.get('amount', 0)) or 0),
-                        project=str(row.get('收费项目', row.get('project', ''))).strip(),
-                        transaction_ref=str(row.get('流水号', row.get('ref', ''))).strip(),
+                        description=_safe_str(row.get('收费项目', row.get('project', ''))),
+                        transaction_ref=_safe_str(row.get('流水号', row.get('ref', ''))),
                         source_file=excel_file.name,
                     )
                     imported += 1
@@ -64,9 +80,10 @@ def payment_create(request):
                 customer_name=request.POST.get('customer_name', '').strip(),
                 payment_date=request.POST.get('payment_date'),
                 amount=request.POST.get('amount', 0),
-                project=request.POST.get('project', '').strip(),
+                description=request.POST.get('description', '').strip(),
                 payment_type=request.POST.get('payment_type', 'outpatient'),
                 payer_type=request.POST.get('payer_type', 'self'),
+                project_id=request.POST.get('project') or None,
                 notes=request.POST.get('notes', ''),
             )
             messages.success(request, '收款记录已添加')
@@ -82,9 +99,10 @@ def payment_edit(request, pk):
     record = get_object_or_404(PaymentRecord, pk=pk)
     if request.method == 'POST':
         record.customer_name = request.POST.get('customer_name', record.customer_name)
-        record.project = request.POST.get('project', record.project)
+        record.description = request.POST.get('description', record.description)
         record.payment_type = request.POST.get('payment_type', record.payment_type)
         record.payer_type = request.POST.get('payer_type', record.payer_type)
+        record.project_id = request.POST.get('project') or None
         record.notes = request.POST.get('notes', record.notes)
         record.save()
         messages.success(request, '记录已更新')

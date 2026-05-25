@@ -2,8 +2,9 @@
 {% block content %}<div class="row justify-content-center"><div class="col-lg-6"><div class="card"><div class="card-header"><i class="bi bi-upload me-2"></i>{{ title }}</div>
 <div class="card-body"><form method="post" enctype="multipart/form-data">{% csrf_token %}
 <div class="mb-3"><label class="form-label">选择Excel文件</label><input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required></div>
-<div class="alert alert-info small">支持从ABC医疗系统导出的Excel格式，包含字段：客户、时间、名称、单价、数量、金额、港币金额<br>
-<a href="{% url 'billing:import_template' %}" class="text-primary"><i class="bi bi-download"></i> 下载Excel模板</a></div>
+<div class="alert alert-info small">
+    <strong>列名要求：</strong>会员姓名(必填)、档案号(可选，留空自动生成)、电话、性别、出生日期
+</div>
 <button type="submit" class="btn btn-primary">开始导入</button>
-<a href="{% url 'billing:import_list' %}" class="btn btn-outline-secondary ms-2">取消</a>
+<a href="{% url 'vip:member_list' %}" class="btn btn-outline-secondary ms-2">取消</a>
 </form></div></div></div></div>{% endblock %}

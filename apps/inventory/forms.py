@@ -26,13 +26,22 @@ class StockInForm(forms.ModelForm):
 
 
 class StockOutForm(forms.ModelForm):
+    project = forms.ModelChoiceField(
+        queryset=None, label='归属项目', required=True,
+        help_text='必选：6个合作项目之一'
+    )
     class Meta:
         model = StockOut
         fields = ['product', 'quantity', 'unit_price', 'out_type',
-                  'customer_name', 'vip_member', 'notes']
+                  'customer_name', 'project', 'notes']
         widgets = {
             'notes': forms.Textarea(attrs={'rows': 2}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.projects.models import Project
+        self.fields['project'].queryset = Project.objects.filter(is_active=True)
 
 
 class StockInImportForm(forms.Form):

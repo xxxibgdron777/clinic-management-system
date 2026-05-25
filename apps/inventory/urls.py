@@ -11,6 +11,7 @@ urlpatterns = [
     path('stock-in/', views.stock_in_list, name='stock_in_list'),
     path('stock-in/create/', views.stock_in_create, name='stock_in_create'),
     path('stock-in/import/', views.stock_in_import, name='stock_in_import'),
+    path('stock-in/template/', views.stock_in_template, name='stock_in_template'),
     path('stock-out/', views.stock_out_list, name='stock_out_list'),
     path('stock-out/create/', views.stock_out_create, name='stock_out_create'),
     path('stock-out/export/', views.stock_out_export, name='stock_out_export'),

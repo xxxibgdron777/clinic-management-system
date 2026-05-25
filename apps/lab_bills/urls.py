@@ -8,6 +8,7 @@ urlpatterns = [
     path('records/create/', views.record_edit, name='record_create'),
     path('records/<int:pk>/edit/', views.record_edit, name='record_edit'),
     path('records/import/', views.record_import, name='record_import'),
+    path('records/template/', views.record_template, name='record_template'),
     path('records/export/', views.record_export, name='record_export'),
     path('records/batch-delete/', views.record_batch_delete, name='record_batch_delete'),
     path('partners/', views.partner_list, name='partner_list'),

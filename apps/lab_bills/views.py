@@ -7,6 +7,7 @@ from django.db.models import Q, Sum
 from django.http import HttpResponse
 from .models import LabPartner, LabBillRecord, LabBillImportLog
 from .forms import LabBillRecordForm, LabBillImportForm, LabBillFilterForm
+from apps.core.template_utils import generate_template_excel
 
 
 @login_required
@@ -89,19 +90,19 @@ def record_import(request):
 
             for idx, row in df.iterrows():
                 try:
-                    customer = str(row.get(col_map.get('customer', ''), '')).strip()
+                    customer = _safe_str(row.get(col_map.get('customer', '')))
                     test_date = _parse_date(row.get(col_map.get('test_date', '')))
-                    test_pkg = str(row.get(col_map.get('test_package', ''), '')).strip()
-                    pkg_code = str(row.get(col_map.get('package_code', ''), '')).strip()
+                    test_pkg = _safe_str(row.get(col_map.get('test_package', '')))
+                    pkg_code = _safe_str(row.get(col_map.get('package_code', '')))
                     qty = int(row.get(col_map.get('quantity', ''), 1) or 1)
                     std_price = float(row.get(col_map.get('standard_price', ''), 0) or 0)
                     disc = float(row.get(col_map.get('discount', ''), 0) or 0)
                     settle_price = float(row.get(col_map.get('settlement_price', ''), 0) or 0)
 
                     # Read tags from Excel, fallback to form defaults
-                    payer = _map_payer(str(row.get(col_map.get('payer', ''), '')).strip()) or default_payer
-                    department = _map_department(str(row.get(col_map.get('department', ''), '')).strip()) or default_department
-                    project = _map_project(str(row.get(col_map.get('project', ''), '')).strip()) or default_project
+                    payer = _map_payer(_safe_str(row.get(col_map.get('payer', '')))) or default_payer
+                    department = _map_department(_safe_str(row.get(col_map.get('department', '')))) or default_department
+                    project_tag = _map_project(_safe_str(row.get(col_map.get('project', '')))) or default_project
 
                     if not customer:
                         skipped += 1
@@ -131,7 +132,7 @@ def record_import(request):
                         settlement_price=settle_price,
                         payer=payer,
                         department=department,
-                        project=project,
+                        project_tag=project_tag,
                     )
                     imported += 1
                 except Exception as e:
@@ -155,6 +156,15 @@ def record_import(request):
         form = LabBillImportForm()
 
     return render(request, 'lab_bills/record_import.html', {'form': form, 'title': '导入账单'})
+
+
+@login_required
+def record_template(request):
+    """下载实验室账单Excel模板"""
+    return generate_template_excel(
+        ['客户姓名', '检测日期', '检测套餐', '编码', '数量', '标准单价', '折扣', '折后价格', '付款人', '科室', '项目'],
+        '实验室账单导入模板.xlsx'
+    )
 
 
 @login_required
@@ -257,6 +267,15 @@ def _detect_columns(columns):
             mapping['project'] = col
 
     return mapping
+
+
+def _safe_str(val):
+    """将Excel值转为字符串，处理NaN"""
+    if val is None:
+        return ''
+    if isinstance(val, float) and pd.isna(val):
+        return ''
+    return str(val).strip()
 
 
 def _parse_date(val):

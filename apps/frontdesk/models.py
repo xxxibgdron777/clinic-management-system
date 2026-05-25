@@ -26,9 +26,18 @@ class PaymentRecord(models.Model):
     ]
 
     customer_name = models.CharField('客户姓名', max_length=100, db_index=True)
+    vip_member = models.ForeignKey(
+        'vip.VIPMember', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='frontdesk_payments', verbose_name='关联会员'
+    )
     payment_date = models.DateField('收款日期', db_index=True)
     amount = models.DecimalField('金额', max_digits=12, decimal_places=2)
-    project = models.CharField('收费项目', max_length=200)
+    description = models.CharField('收费项目描述', max_length=200, blank=True)
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='payments', verbose_name='归属项目',
+        help_text='必选：6个合作项目之一，系统自动按项目汇总每月收入'
+    )
     payment_type = models.CharField('收费类型', max_length=20, choices=PAYMENT_TYPES, default='outpatient')
     payer_type = models.CharField('收入类型', max_length=20, choices=PAYER_TYPES, default='self',
         help_text='付款方类型：自费/保险/企业')

@@ -4,13 +4,14 @@
     <span>VIP会员列表 ({{ members.count }})</span>
     <div class="d-flex gap-2">
         <a href="{% url 'vip:member_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> 新增会员</a>
+        <a href="{% url 'vip:member_import' %}" class="btn btn-sm btn-outline-success"><i class="bi bi-upload"></i> 批量导入</a>
         <a href="{% url 'vip:course_create' %}" class="btn btn-sm btn-outline-primary">新增疗程</a>
-        <a href="{% url 'vip:payment_create' %}" class="btn btn-sm btn-outline-success">新增收款</a>
     </div>
 </div>
 <div class="card-body p-0"><table class="table table-hover"><thead><tr>
-    <th>姓名</th><th>性别</th><th>电话</th><th>出生日期</th><th>状态</th><th>创建时间</th><th>操作</th>
+    <th>档案号</th><th>姓名</th><th>性别</th><th>电话</th><th>状态</th><th>创建时间</th><th>操作</th>
 </tr></thead><tbody>{% for m in members %}<tr>
+    <td><code>{{ m.member_number|default:'-' }}</code></td>
     <td><a href="{% url 'vip:member_detail' m.pk %}" class="text-decoration-none fw-medium">{{ m.name }}</a></td>
     <td>{{ m.get_gender_display }}</td><td>{{ m.phone|default:'-' }}</td>
     <td class="small">{{ m.birth_date|date:'Y-m-d'|default:'-' }}</td>

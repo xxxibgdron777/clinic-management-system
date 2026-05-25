@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-7">
+<div class="card"><div class="card-header">{{ title }}</div>
+<div class="card-body">
+<form method="post" id="configForm">{% csrf_token %}
+
+    <h6 class="mb-3">项目：<strong>{{ project }}</strong></h6>
+
+    <div class="mb-4">
+        <label class="form-label">分成比例</label>
+        <div class="input-group">
+            <input type="range" class="form-range flex-grow-1" id="shareRatioSlider" min="0" max="100" value="{{ share_ratio_pct }}" oninput="syncShareRatio()">
+            <span class="input-group-text" style="min-width:55px;" id="shareRatioLabel">{{ share_ratio_pct }}%</span>
+        </div>
+        <input type="hidden" name="share_ratio" id="shareRatioInput" value="{{ config.share_ratio }}">
+        <div class="form-text">合作方分得剩余金额的百分比</div>
+    </div>
+
+    <hr>
+    <h6 class="mb-3">可扣除费用科目 <small class="text-muted">（勾选哪些科目在分成前扣除）</small></h6>
+
+    {% for cat in categories %}
+    <div class="mb-2">
+        {% if cat.name == '护士服务费' %}
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" name="deductible_categories" value="{{ cat.pk }}" id="cat_{{ cat.pk }}"
+                        {% if cat.pk in selected_ids %}checked{% endif %} onchange="toggleNurseRate()">
+                    <label class="form-check-label" for="cat_{{ cat.pk }}">{{ cat.name }}</label>
+                </div>
+            </div>
+            <div class="col" id="nurseRateGroup">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">收入 ×</span>
+                    <input type="number" step="0.1" min="0" max="100" class="form-control" name="nurse_fee_rate" id="nurseFeeRate"
+                        value="{{ nurse_fee_pct }}" style="width:70px;" oninput="syncNurseRate()">
+                    <span class="input-group-text">%</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="deductible_categories" value="{{ cat.pk }}" id="cat_{{ cat.pk }}"
+                {% if cat.pk in selected_ids %}checked{% endif %}>
+            <label class="form-check-label" for="cat_{{ cat.pk }}">
+                {{ cat.name }}
+                {% if cat.description %}<small class="text-muted">({{ cat.description }})</small>{% endif %}
+            </label>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="alert alert-light small mt-3 mb-0">
+        <strong>计算公式：</strong><br>
+        护士服务费 = 收入 × <span id="formulaNurseRate">{{ nurse_fee_pct }}</span>%（仅勾选时生效）<br>
+        应付合作方 = ( 收入 - 护士服务费 - Σ其他勾选科目费用 ) × <span id="formulaShareRatio">{{ share_ratio_pct }}</span>%
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">保存配置</button>
+        <a href="{% url 'projects:project_list' %}" class="btn btn-outline-secondary">返回</a>
+    </div>
+</form>
+</div></div>
+
+{% if config.pk %}
+<div class="card mt-3"><div class="card-header">历史版本</div>
+<div class="card-body p-0"><table class="table table-sm mb-0">
+<thead><tr><th>时间</th><th>分成比例</th><th>护士服务费</th><th>扣除科目</th></tr></thead>
+<tbody>
+{% for h in project.share_history.all|slice:':10' %}
+<tr>
+    <td class="small">{{ h.changed_at|date:'Y-m-d H:i' }}</td>
+    <td>{{ h.share_ratio|floatformat:0 }}%</td>
+    <td>{{ h.nurse_fee_rate|floatformat:0 }}%</td>
+    <td class="small">{{ h.deductible_keys|join:', '|default:'-' }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="4" class="text-muted text-center py-3">暂无历史记录</td></tr>
+{% endfor %}
+</tbody></table></div></div>
+{% endif %}
+
+</div></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function syncShareRatio() {
+    var v = document.getElementById('shareRatioSlider').value;
+    document.getElementById('shareRatioLabel').textContent = v + '%';
+    document.getElementById('shareRatioInput').value = v / 100;
+    document.getElementById('formulaShareRatio').textContent = v;
+}
+function syncNurseRate() {
+    var v = document.getElementById('nurseFeeRate').value;
+    document.getElementById('formulaNurseRate').textContent = v;
+}
+function toggleNurseRate() {
+    var cb = document.getElementById('cat_{{ nurse_cat_id }}');
+    var grp = document.getElementById('nurseRateGroup');
+    if (cb) grp.style.opacity = cb.checked ? '1' : '0.4';
+}
+</script>
+{% endblock %}

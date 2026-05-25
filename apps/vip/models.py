@@ -9,6 +9,8 @@ from apps.core.models import UserStampedModel
 class VIPMember(UserStampedModel):
     """VIP member profile."""
     name = models.CharField('姓名', max_length=100, db_index=True)
+    member_number = models.CharField('档案号', max_length=20, unique=True, blank=True,
+        help_text='6位数字编码，如 000001，留空自动生成')
     gender = models.CharField('性别', max_length=10, choices=[('M', '男'), ('F', '女')], default='M')
     phone = models.CharField('电话', max_length=30, blank=True)
     birth_date = models.DateField('出生日期', null=True, blank=True)
@@ -22,10 +24,17 @@ class VIPMember(UserStampedModel):
         db_table = 'vip_member'
         verbose_name = 'VIP会员'
         verbose_name_plural = verbose_name
-        ordering = ['name']
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.member_number:
+            last = VIPMember.objects.exclude(member_number='').order_by('-id').first()
+            next_id = (last.id + 1) if last else 1
+            self.member_number = f'{next_id:06d}'
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name
+        return f'{self.member_number} {self.name}'
 
 
 class VIPCourse(models.Model):

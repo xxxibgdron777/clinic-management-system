@@ -33,6 +33,10 @@ class LabBillRecord(UserStampedModel):
         verbose_name='合作方'
     )
     customer_name = models.CharField('客户姓名', max_length=100, db_index=True)
+    vip_member = models.ForeignKey(
+        'vip.VIPMember', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='lab_bill_records', verbose_name='关联会员'
+    )
     test_date = models.DateField('检测日期', null=True, blank=True, db_index=True)
     test_package = models.CharField('检测项目/套餐', max_length=255, blank=True)
     package_code = models.CharField('套餐编码', max_length=100, blank=True)
@@ -71,7 +75,12 @@ class LabBillRecord(UserStampedModel):
 
     payer = models.CharField('付款人', max_length=20, choices=PAYER_CHOICES, blank=True, db_index=True)
     department = models.CharField('科室', max_length=20, choices=DEPARTMENT_CHOICES, blank=True, db_index=True)
-    project = models.CharField('项目', max_length=30, choices=PROJECT_CHOICES, blank=True, db_index=True)
+    project_tag = models.CharField('项目标签(旧)', max_length=30, choices=PROJECT_CHOICES, blank=True, db_index=True)
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='lab_bill_records', verbose_name='归属项目',
+        help_text='必选：6个合作项目之一（华测/迪恩等实验室血检账单计入该项目的血检费用）'
+    )
 
     # --- Custom fields (1-2 reserved) ---
     custom_field_1 = models.CharField('自定义字段1', max_length=255, blank=True)
