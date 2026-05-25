@@ -102,7 +102,32 @@ def record_import(request):
                     # Read tags from Excel, fallback to form defaults
                     payer = _map_payer(_safe_str(row.get(col_map.get('payer', '')))) or default_payer
                     department = _map_department(_safe_str(row.get(col_map.get('department', '')))) or default_department
-                    project_tag = _map_project(_safe_str(row.get(col_map.get('project', '')))) or default_project
+                    raw_project = _safe_str(row.get(col_map.get('project', '')))
+                    project_tag = _map_project(raw_project) or default_project
+                    # 始终尝试匹配实际项目
+                    project_obj = None
+                    if raw_project:
+                        from apps.projects.models import Project
+                        # 1) 精确全名
+                        project_obj = Project.objects.filter(name__iexact=raw_project).first()
+                        # 2) 简名匹配
+                        if not project_obj:
+                            project_obj = Project.objects.filter(short_name__iexact=raw_project).first()
+                        # 3) 去前缀
+                        if not project_obj and '-' in raw_project:
+                            project_obj = Project.objects.filter(name__iexact=raw_project.split('-', 1)[-1].strip()).first()
+                        # 4) 模糊
+                        if not project_obj:
+                            project_obj = Project.objects.filter(name__icontains=raw_project).first()
+                        # 5) 类型名兜底
+                        if not project_obj:
+                            type_map = dict(Project.TYPE_CHOICES)
+                            for code, label in type_map.items():
+                                if label in raw_project:
+                                    project_obj = Project.objects.filter(project_type=code).first()
+                                    break
+                        if project_obj and not project_tag:
+                            project_tag = project_obj.project_type
 
                     if not customer:
                         skipped += 1
@@ -120,9 +145,10 @@ def record_import(request):
                             skipped += 1
                             continue
 
-                    LabBillRecord.objects.create(
+                    rec = LabBillRecord(
                         lab_partner=lab_partner,
                         customer_name=customer,
+                        vip_member=_match_vip_member(customer),
                         test_date=test_date,
                         test_package=test_pkg,
                         package_code=pkg_code,
@@ -133,7 +159,9 @@ def record_import(request):
                         payer=payer,
                         department=department,
                         project_tag=project_tag,
+                        project=project_obj,
                     )
+                    rec.save()
                     imported += 1
                 except Exception as e:
                     errors.append(f'第{idx+2}行: {str(e)}')
@@ -276,6 +304,17 @@ def _safe_str(val):
     if isinstance(val, float) and pd.isna(val):
         return ''
     return str(val).strip()
+
+
+def _match_vip_member(name):
+    """按姓名匹配VIP会员"""
+    if not name:
+        return None
+    try:
+        from apps.vip.models import VIPMember
+        return VIPMember.objects.filter(name=name).first()
+    except Exception:
+        return None
 
 
 def _parse_date(val):

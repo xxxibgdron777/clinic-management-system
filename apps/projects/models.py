@@ -35,6 +35,8 @@ class Project(models.Model):
     partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='projects', verbose_name='合作商')
     name = models.CharField('项目名称', max_length=100)
     project_type = models.CharField('项目类型', max_length=20, choices=TYPE_CHOICES)
+    short_name = models.CharField('项目简称', max_length=50, blank=True,
+        help_text='如"抗衰老首次血检"，用于Excel列匹配')
     unit_price = models.DecimalField('单价', max_digits=12, decimal_places=2, default=0,
         help_text='首次血检:检测费单价; 疗程管理:疗程总价')
     duration_months = models.IntegerField('疗程时长(月)', default=1,

@@ -1,10 +1,7 @@
 """
 Management command to initialize essential reference data:
-- Admin user
-- Lab partners
-- Partners (合作商) + Projects (6个项目)
-- Cost categories (统一费用科目库)
-- Revenue share configs
+- Admin user, Lab partners, Cost categories
+- Partners (合作商) + Projects (15个)
 """
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
@@ -40,7 +37,6 @@ class Command(BaseCommand):
         self.stdout.write(f'  合作实验室: {LabPartner.objects.count()} 家')
 
     def _create_cost_categories(self):
-        """创建统一费用科目库"""
         categories = [
             ('打针', '输液/注射', 1),
             ('补剂', '餐包/营养', 2),
@@ -59,48 +55,60 @@ class Command(BaseCommand):
         self.stdout.write(f'  费用科目: {CostCategory.objects.count()} 个')
 
     def _create_partners_and_projects(self):
-        """创建3个合作商及其6个项目"""
-        partners_config = [
-            ('香港巴黎', '抗衰老', [
-                ('香港巴黎 首次血检', 'first_test', 0, 1),
-                ('香港巴黎 疗程管理', 'course_mgmt', 0, 12),
-            ]),
-            ('叶医生', '生活方式门诊', [
-                ('叶医生 首次血检', 'first_test', 0, 1),
-                ('叶医生 疗程管理', 'course_mgmt', 0, 12),
-            ]),
-            ('杨医生', '荷尔蒙门诊', [
-                ('杨医生 首次血检', 'first_test', 0, 1),
-                ('杨医生 疗程管理', 'course_mgmt', 0, 12),
-            ]),
-        ]
-        for pname, pdesc, projects in partners_config:
-            partner, created = Partner.objects.get_or_create(
-                name=pname, defaults={'notes': pdesc}
-            )
+        """创建合作商及15个完整项目"""
+        # 确保所有合作商存在
+        partner_names = ['香港巴黎', '叶医生', '杨医生', '老干局', '平台工会', '其他']
+        for pn in partner_names:
+            Partner.objects.get_or_create(name=pn)
 
-            for idx, (proj_name, proj_type, price, duration) in enumerate(projects):
-                proj, _ = Project.objects.update_or_create(
-                    partner=partner, name=proj_name,
-                    defaults={
-                        'project_type': proj_type,
-                        'unit_price': price,
-                        'duration_months': duration,
-                        'order': idx,
-                        'is_active': True,
-                    }
+        # 完整项目表：合作商, 项目全称, 简称, 类型, 疗程月数
+        all_projects = [
+            # 香港巴黎
+            ('香港巴黎', '香港巴黎 疗程管理',     '抗衰老',             'course_mgmt', 12),
+            ('香港巴黎', '香港巴黎 首次血检',     '抗衰老首次血检',     'first_test',   1),
+            # 叶医生
+            ('叶医生',  '叶医生 疗程管理',        '生活方式门诊',       'course_mgmt', 12),
+            ('叶医生',  '叶医生 首次血检',        '生活方式门诊首次血检','first_test',   1),
+            # 杨医生
+            ('杨医生',  '杨医生 疗程管理',        '荷尔蒙',             'course_mgmt', 12),
+            ('杨医生',  '杨医生 首次血检',        '荷尔蒙首次血检',     'first_test',   1),
+            # 其他
+            ('其他',    '肠道菌群',               '肠道菌群',           'first_test',   1),
+            ('其他',    '阿尔兹海默症',           '阿尔兹海默症',       'first_test',   1),
+            ('其他',    '血糖代谢检测',           '血糖代谢检测',       'first_test',   1),
+            ('其他',    '其他常规门诊',           '其他常规门诊',       'first_test',   1),
+            # 老干局
+            ('老干局',  '2026外交部体检',         '2026外交部体检',     'first_test',   1),
+            ('老干局',  '2026商务部体检',         '2026商务部体检',     'first_test',   1),
+            ('老干局',  '2025外交部体检',         '2025外交部体检',     'first_test',   1),
+            # 平台工会
+            ('平台工会','2026平台员工健康咨询',   '2026平台员工健康咨询','first_test',   1),
+            ('平台工会','2025平台员工体检',       '2025平台员工体检',   'first_test',   1),
+        ]
+
+        for pname, proj_name, short_name, proj_type, duration in all_projects:
+            partner = Partner.objects.get(name=pname)
+            proj, _ = Project.objects.update_or_create(
+                partner=partner, name=proj_name,
+                defaults={
+                    'project_type': proj_type,
+                    'short_name': short_name,
+                    'duration_months': duration,
+                    'unit_price': 0,
+                    'is_active': True,
+                }
+            )
+            # 分成默认配置
+            config, _ = RevenueShareConfig.objects.get_or_create(
+                project=proj, defaults={'share_ratio': 0.50, 'nurse_fee_rate': 0.10}
+            )
+            if not config.deductible_categories.exists():
+                config.deductible_categories.set(CostCategory.objects.filter(is_system=True))
+            # 关联科目
+            for cat in CostCategory.objects.filter(is_system=True):
+                ProjectCategoryConfig.objects.get_or_create(
+                    project=proj, category=cat, defaults={'is_enabled': True}
                 )
-                # 每个项目默认分成配置
-                config, _ = RevenueShareConfig.objects.get_or_create(
-                    project=proj, defaults={'share_ratio': 0.50, 'nurse_fee_rate': 0.10}
-                )
-                if not config.deductible_categories.exists():
-                    config.deductible_categories.set(CostCategory.objects.filter(is_system=True))
-                # 自动关联所有系统科目
-                for cat in CostCategory.objects.filter(is_system=True):
-                    ProjectCategoryConfig.objects.get_or_create(
-                        project=proj, category=cat, defaults={'is_enabled': True}
-                    )
 
         self.stdout.write(f'  合作商: {Partner.objects.count()} 家')
         self.stdout.write(f'  合作项目: {Project.objects.count()} 个')

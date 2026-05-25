@@ -52,7 +52,7 @@
                 <td class="text-end fw-medium">{{ r.settlement_price }}</td>
                 <td>{{ r.get_payer_display|default:'-' }}</td>
                 <td>{{ r.get_department_display|default:'-' }}</td>
-                <td><span class="badge bg-info text-dark">{{ r.get_project_display|default:'-' }}</span></td>
+                <td><span class="badge bg-info text-dark">{{ r.project.name|default:r.project_tag|default:'-' }}</span></td>
                 <td class="small text-muted">{{ r.created_at|date:'m-d H:i' }}</td>
                 <td><a href="{% url 'lab_bills:record_edit' r.pk %}" class="btn btn-sm btn-outline-secondary">编辑</a></td>
             </tr>

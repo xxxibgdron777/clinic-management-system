@@ -21,21 +21,43 @@ def member_import(request):
         excel_file = request.FILES['excel_file']
         try:
             df = pd.read_excel(excel_file)
+
+            # 在列名中搜索关键词（支持带括号的列名如"会员姓名(必填)"）
+            def col(*keywords):
+                for c in df.columns:
+                    for kw in keywords:
+                        if kw in str(c):
+                            return c
+                return None
+
+            name_col = col('会员姓名', '姓名', '客户姓名', '名称')
+            number_col = col('档案号', '会员编号', '编号')
+            phone_col = col('电话')
+            gender_col = col('性别')
+            birth_col = col('出生日期', '生日')
+
             imported, skipped = 0, 0
             for _, row in df.iterrows():
-                name = _safe_str(row.get('会员姓名', row.get('姓名', '')))
-                number = _safe_str(row.get('档案号', row.get('会员编号', row.get('编号', ''))))
+                name = _safe_str(row.get(name_col)) if name_col else ''
+                number = _safe_str(row.get(number_col)) if number_col else ''
                 if not name:
                     skipped += 1
                     continue
-                phone = _safe_str(row.get('电话', ''))
-                gender = 'F' if '女' in _safe_str(row.get('性别', '')) else 'M'
+                phone = _safe_str(row.get(phone_col)) if phone_col else ''
+                gender = 'F' if '女' in _safe_str(row.get(gender_col)) else 'M' if gender_col else 'M'
                 birth = None
-                try:
-                    birth = pd.to_datetime(row.get('出生日期', row.get('生日', ''))).date()
-                except Exception:
-                    pass
-                if VIPMember.objects.filter(member_number=number, member_number__gt='').exists() and number:
+                if birth_col:
+                    try:
+                        bd_val = row.get(birth_col)
+                        if pd.notna(bd_val):
+                            birth = pd.to_datetime(bd_val).date()
+                    except Exception:
+                        pass
+                # 档案号格式化为6位数字
+                if number and number.isdigit():
+                    number = str(int(number)).zfill(6)
+                # 去重：已有同名同号则跳过
+                if number and VIPMember.objects.filter(member_number=number).exists():
                     skipped += 1
                     continue
                 VIPMember.objects.create(
