@@ -94,7 +94,7 @@ def stock_in_create(request):
 def stock_in_template(request):
     """下载入库Excel模板"""
     return generate_template_excel(
-        ['商品名称', '数量', '单价', '供应商', '批次号'],
+        ['商品名称', '数量', '单价', '类别', '供应商', '批次号'],
         '入库导入模板.xlsx'
     )
 
